@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
-<div style="position: absolute; width: 300px; height: 300px; background: #2d5a27; filter: blur(100px); border-radius: 50%; top: 10%; left: 10%; z-index: -1; opacity: 0.4;">
 <body>
 <div class="container">
 
@@ -13,8 +12,9 @@
 
     <div id="chatbox" class="chatbox"></div>
 
-    <textarea id="userInput" placeholder="Speak your mind..."></textarea>
-<div class="controls">
+    <textarea id="userInput" placeholder="Type your message..."></textarea>
+
+<div class="button-group">
     <button onclick="sendText()">Send Text</button>
     <button onclick="startRecording()">Record Voice</button>
     <button onclick="stopRecording()">Stop Recording</button>
@@ -26,5 +26,4 @@
 <script src="/static/script.js"></script>
 
 </body>
-</div>
 </html>

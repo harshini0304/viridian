@@ -95,19 +95,12 @@ class TextEmotionDetector:
 
         emb = self.get_bert_embedding(text)
 
-        pooled = np.mean(emb, axis=1)[0]      # mean pooling
-        pooled = pooled.reshape(1, 768, 1)    # EXACT training shape
-
-        pred = self.classifier.predict(pooled)
-
-        print("Prediction raw:", pred)
+        # shape: (1, seq_len, 768)
+        pred = self.classifier.predict(emb)
 
         emotion = np.argmax(pred, axis=1)
 
-        labels = ["anger","joy","sadness","fear","love","neutral"]
-
-        print("Pred index:", emotion[0])
-        print("Pred label:", labels[int(emotion[0])])
+        labels = ["anger", "joy", "sadness", "fear", "love", "neutral"]
 
         return labels[int(emotion[0])]
 
@@ -116,10 +109,7 @@ class TextEmotionDetector:
 
         emb = self.get_bert_embedding(text)
 
-        pooled = np.mean(emb, axis=1)[0]
-        pooled = pooled.reshape(1, 768, 1)
-
-        probs = self.classifier.predict(pooled)[0]
+        probs = self.classifier.predict(emb)[0]
 
         emotion_map = {
             0: "anger",
@@ -131,9 +121,10 @@ class TextEmotionDetector:
         }
 
         return {
-        emotion_map[i]: float(probs[i])
-        for i in range(len(probs))
+            emotion_map[i]: float(probs[i])
+            for i in range(len(probs))
         }
+
 
     # ===============================
     # EVALUATION

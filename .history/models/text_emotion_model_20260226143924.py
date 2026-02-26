@@ -92,24 +92,21 @@ class TextEmotionDetector:
     # ===============================
 
     def predict_emotion(self, text):
+        emb = self.get_bert_embedding(text) # Shape: (1, sequence_length, 768)
 
-        emb = self.get_bert_embedding(text)
-
-        pooled = np.mean(emb, axis=1)[0]      # mean pooling
-        pooled = pooled.reshape(1, 768, 1)    # EXACT training shape
+    # 1. Mean pool to get (1, 768)
+        pooled = np.mean(emb, axis=1) 
+    
+    # 2. Reshape to (1, 1, 768) -> [Batch, 1 Word, 768 Features]
+    # This is likely what your LSTM expects if it was trained on pooled data
+        pooled = pooled.reshape(1, 1, 768) 
 
         pred = self.classifier.predict(pooled)
-
-        print("Prediction raw:", pred)
-
-        emotion = np.argmax(pred, axis=1)
-
-        labels = ["anger","joy","sadness","fear","love","neutral"]
-
-        print("Pred index:", emotion[0])
-        print("Pred label:", labels[int(emotion[0])])
-
-        return labels[int(emotion[0])]
+    
+        labels = ["sadness", "anger", "joy", "fear", "neutral", "love"]
+        emotion_idx = np.argmax(pred, axis=1)[0]
+    
+        return labels[emotion_idx]
 
 
     def predict_emotion_proba(self, text):
@@ -122,7 +119,7 @@ class TextEmotionDetector:
         probs = self.classifier.predict(pooled)[0]
 
         emotion_map = {
-            0: "anger",
+             0: "anger",
             1: "joy",
             2: "sadness",
             3: "fear",

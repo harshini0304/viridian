@@ -104,7 +104,7 @@ class TextEmotionDetector:
 
         emotion = np.argmax(pred, axis=1)
 
-        labels = ["anger","joy","sadness","fear","love","neutral"]
+        labels = ["sadness","anger","joy","fear","neutral","love"]
 
         print("Pred index:", emotion[0])
         print("Pred label:", labels[int(emotion[0])])

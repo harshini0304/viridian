@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&display=swap');
+
+:root {
+    --leaf-green: #2d5a27;
+    --mist: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --deep-moss: #1a2e1a;
+    --glow: #a8e0a4;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Quicksand', sans-serif;
+    /* Immersive dark forest gradient */
+    background: radial-gradient(circle at center, #2c4a3e 0%, #0f1b15 100%);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* The "Window" into the forest */
+.container {
+    width: 400px;
+    height: 85vh;
+    background: var(--mist);
+    backdrop-filter: blur(15px); /* Frosted glass effect */
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+h2 {
+    color: var(--glow);
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    margin-top: 0;
+    text-shadow: 0 0 10px rgba(168, 224, 164, 0.4);
+}
+
+/* Chat area as a hollowed out space */
+.chatbox {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 10px;
+    mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+}
+
+/* Organic Textarea */
+textarea {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 15px;
+    color: white;
+    font-family: inherit;
+    resize: none;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+textarea:focus {
+    outline: none;
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--glow);
+}
+
+/* Minimalist Nature Buttons */
+button {
+    background: var(--mist);
+    color: white;
+    border: 1px solid var(--glass-border);
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin: 4px;
+    font-size: 0.8rem;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button:hover {
+    background: var(--glow);
+    color: var(--deep-moss);
+    transform: scale(1.05);
+}
+
+/* "The Heartbeat" - Send Button highlight */
+button[onclick="sendText()"] {
+    background: rgba(168, 224, 164, 0.2);
+    border: 1px solid var(--glow);
+    font-weight: 500;
+}
+
+/* Voice Recording Visualizer Placeholder */
+button[onclick="startRecording()"] {
+    border-radius: 50px; /* Circular for a 'berry' look */
+}
+
+/* Custom Scrollbar for the mossy feel */
+.chatbox::-webkit-scrollbar { width: 4px; }
+.chatbox::-webkit-scrollbar-thumb { background: var(--glow); border-radius: 10px; }

@@ -5,9 +5,9 @@ from transformers import BertTokenizer, BertModel
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 
-# ===============================
+# =====================================
 # HYBRID MODEL (CNN + LSTM)
-# ===============================
+# =====================================
 
 class BERT_CNN_LSTM(tf.keras.Model):
 
@@ -29,7 +29,6 @@ class BERT_CNN_LSTM(tf.keras.Model):
         x = self.dense(x)
         return self.out(x)
 
-    # Required for model loading
     def get_config(self):
         config = super(BERT_CNN_LSTM, self).get_config()
         config.update({"num_classes": self.num_classes})
@@ -40,9 +39,9 @@ class BERT_CNN_LSTM(tf.keras.Model):
         return cls(**config)
 
 
-# ===============================
+# =====================================
 # TEXT EMOTION DETECTOR
-# ===============================
+# =====================================
 
 class TextEmotionDetector:
 
@@ -54,25 +53,36 @@ class TextEmotionDetector:
 
         print("🧠 Building emotion classifier architecture...")
 
-        # 1️⃣ Create architecture
+        # Build architecture
         self.classifier = BERT_CNN_LSTM()
 
-# 2️⃣ Build with CORRECT trained shape
         dummy_input = np.zeros((1, 768, 1), dtype=np.float32)
         self.classifier(dummy_input)
 
-# 3️⃣ Load weights
+        print("🧠 Loading trained emotion classifier weights...")
         self.classifier.load_weights("saved_models/text_emotion_hybrid.h5")
 
         print("✅ Emotion classifier loaded")
         print("✅ Text emotion model ready")
 
+        # ⭐ FINAL LABEL ORDER — DO NOT CHANGE
+        # (matches your trained model)
+        self.labels = [
+            "sadness",
+            "anger",
+            "joy",
+            "fear",
+            "neutral",
+            "love"
+        ]
 
-    # ===============================
+
+    # =====================================
     # BERT EMBEDDING
-    # ===============================
+    # =====================================
 
     def get_bert_embedding(self, text):
+
         tokens = self.tokenizer(
             text,
             return_tensors="pt",
@@ -87,30 +97,41 @@ class TextEmotionDetector:
         return outputs.last_hidden_state.numpy()
 
 
-    # ===============================
-    # PREDICT EMOTION
-    # ===============================
+    # =====================================
+    # EMOTION PREDICTION
+    # =====================================
 
     def predict_emotion(self, text):
 
         emb = self.get_bert_embedding(text)
 
-        pooled = np.mean(emb, axis=1)[0]      # mean pooling
-        pooled = pooled.reshape(1, 768, 1)    # EXACT training shape
+        pooled = np.mean(emb, axis=1)[0]
+        pooled = pooled.reshape(1, 768, 1)
 
-        pred = self.classifier.predict(pooled)
+        pred = self.classifier.predict(pooled, verbose=0)[0]
 
         print("Prediction raw:", pred)
 
-        emotion = np.argmax(pred, axis=1)
+        pred_index = np.argmax(pred)
+        confidence = pred[pred_index]
 
-        labels = ["anger","joy","sadness","fear","love","neutral"]
+        print("Pred index:", pred_index)
+        print("Confidence:", confidence)
 
-        print("Pred index:", emotion[0])
-        print("Pred label:", labels[int(emotion[0])])
+        # ⭐ CONFIDENCE FILTER
+        if confidence < 0.35:
+            return "neutral"
 
-        return labels[int(emotion[0])]
+        emotion = self.labels[pred_index]
 
+        print("Pred label:", emotion)
+
+        return emotion
+
+
+    # =====================================
+    # PROBABILITY OUTPUT
+    # =====================================
 
     def predict_emotion_proba(self, text):
 
@@ -119,25 +140,17 @@ class TextEmotionDetector:
         pooled = np.mean(emb, axis=1)[0]
         pooled = pooled.reshape(1, 768, 1)
 
-        probs = self.classifier.predict(pooled)[0]
-
-        emotion_map = {
-            0: "anger",
-            1: "joy",
-            2: "sadness",
-            3: "fear",
-            4: "love",
-            5: "neutral"
-        }
+        probs = self.classifier.predict(pooled, verbose=0)[0]
 
         return {
-        emotion_map[i]: float(probs[i])
-        for i in range(len(probs))
+            self.labels[i]: float(probs[i])
+            for i in range(len(probs))
         }
 
-    # ===============================
-    # EVALUATION
-    # ===============================
+
+    # =====================================
+    # MODEL EVALUATION
+    # =====================================
 
     def evaluate(self, y_true, y_pred):
 

@@ -1,0 +1,132 @@
+/* Importing a clean, modern font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+:root {
+    --primary-green: #2d5a4c;
+    --soft-viridian: #e8f3ee;
+    --accent-sage: #8dad9c;
+    --text-dark: #2c3e50;
+    --white: #ffffff;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f5f7f6 0%, #d6e2dd 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+.container {
+    background: var(--white);
+    width: 90%;
+    max-width: 500px;
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+h2 {
+    color: var(--primary-green);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+/* Chatbox Styling */
+.chatbox {
+    height: 350px;
+    background: var(--soft-viridian);
+    border-radius: 16px;
+    padding: 1rem;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid rgba(45, 90, 76, 0.1);
+}
+
+/* Scrollbar customization */
+.chatbox::-webkit-scrollbar {
+    width: 6px;
+}
+.chatbox::-webkit-scrollbar-thumb {
+    background: var(--accent-sage);
+    border-radius: 10px;
+}
+
+/* Textarea Styling */
+textarea {
+    width: 100%;
+    height: 80px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1.5px solid var(--accent-sage);
+    resize: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-green);
+}
+
+/* Button Layout & Styling */
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+button {
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Specific Button Colors */
+button[onclick="sendText()"] {
+    background-color: var(--primary-green);
+    color: white;
+    grid-column: span 2; /* Main action spans across */
+}
+
+button[onclick="startRecording()"] {
+    background-color: var(--accent-sage);
+    color: white;
+}
+
+button[onclick="stopRecording()"] {
+    background-color: #e57373; /* Muted coral for stop */
+    color: white;
+}
+
+button[onclick="endSession()"] {
+    background-color: transparent;
+    color: var(--primary-green);
+    border: 1.5px solid var(--primary-green);
+    grid-column: span 2;
+    margin-top: 10px;
+}

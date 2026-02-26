@@ -3,7 +3,7 @@ from flask_cors import CORS
 from database.mongo_handler import MongoHandler
 from config import Config
 from models.text_emotion_model import TextEmotionDetector
-from utils.response_generator import generate_therapist_reply
+from response_generator import generate_therapist_reply
 
 import pyttsx3
 import os

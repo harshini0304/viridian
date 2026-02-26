@@ -27,9 +27,7 @@ async function sendText() {
 }
 
 // ---------------- VOICE ----------------
-// ---------------- VOICE ----------------
 function startRecording() {
-
     if (!("webkitSpeechRecognition" in window)) {
         addMessage("❌ Speech recognition not supported", "bot");
         return;
@@ -38,36 +36,18 @@ function startRecording() {
     recognition = new webkitSpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
-    recognition.interimResults = true;
-
-    let finalTranscript = "";
+    recognition.interimResults = false;
 
     addMessage("🎤 Listening… speak now", "bot");
 
-    recognition.onresult = (event) => {
-
-        let interimTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            let transcript = event.results[i][0].transcript;
-
-            if (event.results[i].isFinal) {
-                finalTranscript += transcript;
-            } else {
-                interimTranscript += transcript;
-            }
-        }
-
-        // ONLY send when speech is FINAL
-        if (finalTranscript.length > 0) {
-            addMessage(finalTranscript, "user");
-            sendToBot(finalTranscript);
-            finalTranscript = "";
-        }
+    recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        addMessage(transcript, "user");
+        await sendToBot(transcript);
     };
 
     recognition.onerror = () => {
-        addMessage("⚠️ Voice recognition failed", "bot");
+        addMessage("⚠️ Could not understand audio", "bot");
     };
 
     recognition.start();

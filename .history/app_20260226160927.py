@@ -3,7 +3,6 @@ from flask_cors import CORS
 from database.mongo_handler import MongoHandler
 from config import Config
 from models.text_emotion_model import TextEmotionDetector
-from utils.response_generator import generate_therapist_reply
 
 import pyttsx3
 import os
@@ -30,13 +29,17 @@ print("✅ Emotion detector ready")
 engine = pyttsx3.init()
 engine.setProperty('rate', 170)
 
+tts_lock = threading.Lock()
+
 def speak_text(text):
     def run():
-        try:
-            engine.say(text)
-            engine.runAndWait()
-        except Exception as e:
-            print("TTS error:", e)
+        with tts_lock:
+            try:
+                engine.stop()  # stop any ongoing speech
+                engine.say(text)
+                engine.runAndWait()
+            except Exception as e:
+                print("TTS error:", e)
 
     threading.Thread(target=run, daemon=True).start()
 
@@ -46,6 +49,42 @@ print("🧠 Loading Whisper model...")
 whisper_model = whisper.load_model("base")
 print("✅ Whisper loaded")
 
+# ---------------- THERAPIST RESPONSE ENGINE ----------------
+
+def generate_therapist_reply(emotion, user_text, previous_messages=None):
+
+    ack = random.choice(ACKNOWLEDGEMENTS.get(emotion, ACKNOWLEDGEMENTS["neutral"]))
+
+    # 🔥 MEMORY LOGIC
+    memory_line = ""
+
+    if previous_messages:
+        for msg in previous_messages:
+            if msg["sender"] == "user":
+                if "exam" in msg["text"].lower():
+                    memory_line = "You mentioned exams earlier — is that still worrying you?"
+                    break
+                if "family" in msg["text"].lower():
+                    memory_line = "Earlier you talked about your family. Is this related?"
+                    break
+                if "stress" in msg["text"].lower():
+                    memory_line = "You've been feeling stressed for a while. Has something changed?"
+
+    # Context detection
+    if "exam" in user_text.lower():
+        reflect = "Exams can create a lot of pressure and expectations."
+    elif "family" in user_text.lower():
+        reflect = "Family situations can be emotionally complex."
+    else:
+        reflect = random.choice(REFLECTIONS)
+
+    question = random.choice(QUESTIONS)
+    support = random.choice(SUPPORT_LINES)
+
+    if memory_line:
+        return f"{ack} {memory_line} {support}"
+
+    return f"{ack} {reflect} {question} {support}"
 
 # ---------------- ROUTES ----------------
 
@@ -83,6 +122,7 @@ def send_text():
             text,
             previous_messages
         )
+
         mongo.add_message(session_id, reply, "bot")
 
         speak_text(reply)
@@ -121,13 +161,7 @@ def upload_audio():
 
         mongo.add_message(session_id, f"[Detected emotion: {emotion}]", "system")
 
-        previous_messages = mongo.get_recent_messages(session_id)
-
-        reply = generate_therapist_reply(
-            emotion,
-            transcribed_text,
-            previous_messages
-        )
+        reply = generate_therapist_reply(emotion, transcribed_text)
 
         mongo.add_message(session_id, reply, "bot")
 

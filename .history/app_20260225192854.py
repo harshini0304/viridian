@@ -3,7 +3,6 @@ from flask_cors import CORS
 from database.mongo_handler import MongoHandler
 from config import Config
 from models.text_emotion_model import TextEmotionDetector
-from utils.response_generator import generate_therapist_reply
 
 import pyttsx3
 import os
@@ -46,6 +45,20 @@ print("🧠 Loading Whisper model...")
 whisper_model = whisper.load_model("base")
 print("✅ Whisper loaded")
 
+# ---------------- THERAPIST RESPONSE ENGINE ----------------
+
+def generate_therapist_reply(emotion, user_text):
+
+    responses = {
+        "anger": "It sounds like something really frustrated you. What happened?",
+        "sadness": "I'm really sorry you're feeling this way. Do you want to talk about what's weighing on you?",
+        "fear": "That sounds overwhelming. What's making you feel anxious right now?",
+        "joy": "That’s wonderful to hear. What’s been going well for you?",
+        "love": "That sounds meaningful. Tell me more about that connection.",
+        "neutral": "I hear you. Tell me more about that."
+    }
+
+    return responses.get(emotion, "I’m here with you. Tell me more.")
 
 # ---------------- ROUTES ----------------
 
@@ -76,13 +89,8 @@ def send_text():
         mongo.add_message(session_id, f"[Detected emotion: {emotion}]", "system")
 
         # Generate therapist-style reply
-        previous_messages = mongo.get_recent_messages(session_id)
+        reply = generate_therapist_reply(emotion, text)
 
-        reply = generate_therapist_reply(
-            emotion,
-            text,
-            previous_messages
-        )
         mongo.add_message(session_id, reply, "bot")
 
         speak_text(reply)
@@ -121,13 +129,7 @@ def upload_audio():
 
         mongo.add_message(session_id, f"[Detected emotion: {emotion}]", "system")
 
-        previous_messages = mongo.get_recent_messages(session_id)
-
-        reply = generate_therapist_reply(
-            emotion,
-            transcribed_text,
-            previous_messages
-        )
+        reply = generate_therapist_reply(emotion, transcribed_text)
 
         mongo.add_message(session_id, reply, "bot")
 

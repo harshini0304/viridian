@@ -100,14 +100,9 @@ class TextEmotionDetector:
 
         pred = self.classifier.predict(pooled)
 
-        print("Prediction raw:", pred)
-
         emotion = np.argmax(pred, axis=1)
 
-        labels = ["anger","joy","sadness","fear","love","neutral"]
-
-        print("Pred index:", emotion[0])
-        print("Pred label:", labels[int(emotion[0])])
+        labels = ["anger", "joy", "sadness", "fear", "love", "neutral"]
 
         return labels[int(emotion[0])]
 
@@ -122,7 +117,7 @@ class TextEmotionDetector:
         probs = self.classifier.predict(pooled)[0]
 
         emotion_map = {
-            0: "anger",
+             0: "anger",
             1: "joy",
             2: "sadness",
             3: "fear",
