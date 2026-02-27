@@ -73,7 +73,6 @@ def send_text():
         session_id = data["session_id"]
         text = data["text"]
 
-        # Save user message
         chat_memory[session_id].append({
             "sender": "user",
             "text": text
@@ -82,28 +81,25 @@ def send_text():
         # Emotion detection
         emotion = emotion_detector.predict_emotion(text)
 
-        # Update summary engine
+        # Update summary memory
         summary_engine.update(session_id, text, emotion)
 
-        # Save emotion log
         chat_memory[session_id].append({
             "sender": "system",
             "text": f"[Detected emotion: {emotion}]"
         })
 
-        # Update therapy engine
         therapy_engine.update_emotional_state(session_id, emotion)
 
-        reply = therapy_engine.build_reply(
-            session_id,
-            emotion
-        )
+        reply = therapy_engine.build_reply(session_id, emotion)
 
-        # Save bot reply
         chat_memory[session_id].append({
             "sender": "bot",
             "text": reply
         })
+
+        # Debug summary
+        print("SESSION SUMMARY:", summary_engine.generate_summary(session_id))
 
         return jsonify({
             "reply": reply,
@@ -141,6 +137,7 @@ def upload_audio():
 
         emotion = emotion_detector.predict_emotion(transcribed_text)
 
+        # Correct variable here
         summary_engine.update(session_id, transcribed_text, emotion)
 
         chat_memory[session_id].append({
@@ -167,32 +164,6 @@ def upload_audio():
     except Exception as e:
         print("ERROR /upload_audio:", e)
         return jsonify({"error": "Audio processing failed"}), 500
-    
-
-
-@app.route("/end_session", methods=["POST"])
-def end_session():
-    try:
-        data = request.json
-        session_id = data["session_id"]
-
-        result = summary_engine.generate_summary(session_id)
-
-        if not result:
-            return jsonify({"summary": None})
-
-        stats, narrative = result
-
-        print("\n🧠 SESSION SUMMARY STATS")
-        print(f"Dominant emotion: {stats['dominant_emotion']}")
-        print(f"Messages shared: {stats['message_count']}")
-        print(f"Emotional range: {stats['emotional_variation']}\n")
-
-        return jsonify({"summary": narrative})
-
-    except Exception as e:
-        print("ERROR /end_session:", e)
-        return jsonify({"error": "Failed to generate summary"}), 500
 
 # ---------------- RUN ----------------
 

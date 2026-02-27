@@ -53,12 +53,6 @@ emobank_final = emobank[["text", "emotion"]]
 
 data = pd.concat([goemo_final, emobank_final], ignore_index=True)
 
-data = (
-    data.groupby("emotion")
-    .apply(lambda x: x.sample(n=2000, random_state=42))
-    .reset_index(drop=True)
-)
-
 texts = data["text"].astype(str).tolist()
 labels = data["emotion"].astype(str).tolist()
 

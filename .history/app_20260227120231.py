@@ -141,6 +141,7 @@ def upload_audio():
 
         emotion = emotion_detector.predict_emotion(transcribed_text)
 
+        # Correct variable here
         summary_engine.update(session_id, transcribed_text, emotion)
 
         chat_memory[session_id].append({
@@ -161,12 +162,13 @@ def upload_audio():
 
         return jsonify({
             "reply": reply,
-            "emotion": emotion
+            "emotion": emotion,
+            "summary": summary
         })
 
     except Exception as e:
         print("ERROR /upload_audio:", e)
-        return jsonify({"error": "Audio processing failed"}), 500
+        return jsonify({"error": "Audio processing failed"}), 500 
     
 
 
@@ -176,19 +178,20 @@ def end_session():
         data = request.json
         session_id = data["session_id"]
 
-        result = summary_engine.generate_summary(session_id)
+        summary = summary_engine.generate_summary(session_id)
 
-        if not result:
+        if not summary:
             return jsonify({"summary": None})
 
-        stats, narrative = result
+        summary_text = (
+            f"🧠 Session Summary:\n\n"
+            f"• Dominant emotion: {summary['dominant_emotion']}\n"
+            f"• Messages shared: {summary['message_count']}\n"
+            f"• Emotional range: {summary['emotional_variation']} different emotions\n\n"
+            f"You showed courage by expressing this."
+        )
 
-        print("\n🧠 SESSION SUMMARY STATS")
-        print(f"Dominant emotion: {stats['dominant_emotion']}")
-        print(f"Messages shared: {stats['message_count']}")
-        print(f"Emotional range: {stats['emotional_variation']}\n")
-
-        return jsonify({"summary": narrative})
+        return jsonify({"summary": summary_text})
 
     except Exception as e:
         print("ERROR /end_session:", e)

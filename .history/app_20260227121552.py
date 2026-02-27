@@ -176,19 +176,9 @@ def end_session():
         data = request.json
         session_id = data["session_id"]
 
-        result = summary_engine.generate_summary(session_id)
+        summary_text = summary_engine.generate_summary(session_id)
 
-        if not result:
-            return jsonify({"summary": None})
-
-        stats, narrative = result
-
-        print("\n🧠 SESSION SUMMARY STATS")
-        print(f"Dominant emotion: {stats['dominant_emotion']}")
-        print(f"Messages shared: {stats['message_count']}")
-        print(f"Emotional range: {stats['emotional_variation']}\n")
-
-        return jsonify({"summary": narrative})
+        return jsonify({"summary": summary_text})
 
     except Exception as e:
         print("ERROR /end_session:", e)

@@ -1,8 +1,3 @@
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -26,6 +21,8 @@ g3 = pd.read_csv("datasets/goemotions_3.csv")
 
 goemo = pd.concat([g1, g2, g3], ignore_index=True)
 
+# ----------- GOEMOTIONS LABEL EXTRACTION -----------
+
 GOEMOTION_COLUMNS = [
     "anger", "joy", "sadness", "fear", "love", "neutral"
 ]
@@ -36,28 +33,31 @@ def extract_goemotion(row):
             return emo
     return "neutral"
 
+
 print("📂 Loading EmoBank dataset...")
 emobank = pd.read_csv("datasets/emobank.csv")
 
+# ----------- PROCESS GOEMOTIONS -----------
+
 print("🔄 Processing GoEmotions labels...")
+
 goemo["emotion"] = goemo.apply(extract_goemotion, axis=1)
 goemo_final = goemo[["text", "emotion"]]
 
+# ----------- PROCESS EMOBANK -----------
+
 print("🔄 Processing EmoBank labels...")
+
+# EmoBank usually has 'emotion' OR 'valence'
 if "emotion" not in emobank.columns:
     emobank["emotion"] = "neutral"
 
 emobank_final = emobank[["text", "emotion"]]
 
-# ---------------- COMBINE DATASETS ----------------
+# ----------- COMBINE DATASETS -----------
 
 data = pd.concat([goemo_final, emobank_final], ignore_index=True)
 
-data = (
-    data.groupby("emotion")
-    .apply(lambda x: x.sample(n=2000, random_state=42))
-    .reset_index(drop=True)
-)
 
 texts = data["text"].astype(str).tolist()
 labels = data["emotion"].astype(str).tolist()
@@ -89,22 +89,20 @@ class_weights = compute_class_weight(
 class_weights = dict(zip(classes, class_weights))
 print("Class weights:", class_weights)
 
+
 # ---------------- FEATURE EXTRACTION ----------------
 
 print("🧠 Initializing TextEmotionDetector...")
 detector = TextEmotionDetector()
 
-print("🔎 Extracting BERT CLS embeddings...")
+print("🔎 Extracting BERT embeddings (this may take time)...")
 
 X = []
 for i, text in enumerate(texts):
     try:
         emb = detector.get_bert_embedding(text)
-
-        # 🔥 USE CLS TOKEN (correct method)
-        pooled = emb[:, 0, :][0]   # shape (768,)
+        pooled = np.mean(emb, axis=1)[0]
         X.append(pooled)
-
     except Exception:
         X.append(np.zeros(768))
 
@@ -122,17 +120,17 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# ❌ DO NOT reshape anymore
-# Dense model expects (batch, 768)
+X_train = X_train.reshape(-1, 768, 1)
+X_test = X_test.reshape(-1, 768, 1)
 
 # ---------------- TRAIN MODEL ----------------
 
-print("🚀 Training Dense Emotion Classifier...")
+print("🚀 Training BERT + CNN/LSTM hybrid model...")
 
 classifier = detector.classifier
 
 classifier.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=3e-4),
+    optimizer="adam",
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"]
 )
@@ -140,11 +138,12 @@ classifier.compile(
 history = classifier.fit(
     X_train,
     y_train,
-    epochs=20,                 # increased training
-    batch_size=32,
+    epochs=5,
+    batch_size=16,
     class_weight=class_weights,
     validation_data=(X_test, y_test)
 )
+
 
 # ---------------- EVALUATION ----------------
 
@@ -176,9 +175,7 @@ for k, v in metrics.items():
 
 os.makedirs("../saved_models", exist_ok=True)
 
-print("\n💾 Saving trained emotion model...")
-
-classifier.save_weights("../saved_models/text_emotion_hybrid.h5")
-
-print("✅ Model weights saved")
+model_path = "../saved_models/text_emotion_hybrid.h5"
+classifier.save("../saved_models/text_emotion_hybrid.keras")
+print(f"\n✅ Text Emotion Model saved at: {model_path}")
 print("🎉 Text Emotion Training Complete.")
