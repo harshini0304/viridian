@@ -45,7 +45,6 @@ function startRecording() {
 
     if (recognition) {
         recognition.stop();
-        recognition = null;
     }
 
     recognition = new webkitSpeechRecognition();
@@ -53,40 +52,23 @@ function startRecording() {
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    let finalTranscript = "";
-    let sendTimeout = null;
-
     const listeningMsg = addMessage("🎤 Listening… speak now", "system");
 
-    recognition.onresult = (event) => {
+    recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
 
-        finalTranscript = event.results[0][0].transcript.trim();
+        listeningMsg.remove();
 
-        // Clear previous timer
-        if (sendTimeout) {
-            clearTimeout(sendTimeout);
-        }
-
-        // Wait 700ms before sending (buffer)
-        sendTimeout = setTimeout(async () => {
-
-            recognition.stop();
-            listeningMsg.remove();
-
-            if (finalTranscript.length > 0) {
-                addMessage(finalTranscript, "user");
-                await sendToBot(finalTranscript);
-            }
-
-        }, 700);
+        addMessage(transcript, "user");
+        await sendToBot(transcript);
     };
 
     recognition.onerror = () => {
         listeningMsg.remove();
+        addMessage("⚠️ Voice recognition failed", "bot");
     };
 
     recognition.onend = () => {
-        recognition = null;
         listeningMsg.remove();
     };
 

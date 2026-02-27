@@ -53,32 +53,25 @@ function startRecording() {
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    let finalTranscript = "";
-    let sendTimeout = null;
+    let hasSpoken = false;
 
     const listeningMsg = addMessage("🎤 Listening… speak now", "system");
 
-    recognition.onresult = (event) => {
+    recognition.onresult = async (event) => {
 
-        finalTranscript = event.results[0][0].transcript.trim();
+        if (hasSpoken) return;  // 🔥 prevents multiple sends
 
-        // Clear previous timer
-        if (sendTimeout) {
-            clearTimeout(sendTimeout);
+        hasSpoken = true;
+
+        const transcript = event.results[0][0].transcript.trim();
+
+        recognition.stop();  // 🔥 force stop immediately
+        listeningMsg.remove();
+
+        if (transcript.length > 0) {
+            addMessage(transcript, "user");
+            await sendToBot(transcript);
         }
-
-        // Wait 700ms before sending (buffer)
-        sendTimeout = setTimeout(async () => {
-
-            recognition.stop();
-            listeningMsg.remove();
-
-            if (finalTranscript.length > 0) {
-                addMessage(finalTranscript, "user");
-                await sendToBot(finalTranscript);
-            }
-
-        }, 700);
     };
 
     recognition.onerror = () => {
@@ -86,8 +79,8 @@ function startRecording() {
     };
 
     recognition.onend = () => {
-        recognition = null;
         listeningMsg.remove();
+        recognition = null;
     };
 
     recognition.start();

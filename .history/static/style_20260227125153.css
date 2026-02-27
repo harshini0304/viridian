@@ -91,14 +91,5 @@ button:hover {
     color: var(--viridian-glow);
 }
 
-.controls {
-    margin-top: 15px;
-}
-
-textarea {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
 .chatbox::-webkit-scrollbar { width: 4px; }
 .chatbox::-webkit-scrollbar-thumb { background: var(--viridian-glow); }
